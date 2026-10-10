@@ -24,22 +24,3 @@ An enterprise-grade, offline-first SCADA and Operations Control Center (OCC) das
 
 ---
 
-## Getting Started & Installation
-
-1. **Clone the repository:**
-```bash
-git clone https://github.com/YOUR_USERNAME/gmrc-metro-planner.git
-
-```
-
-
-2. **Open the application:**
-Navigate into the project directory and open `index.html` in any modern web browser. No backend server installation or database configuration is required.
-
----
-
-## Deployment (GitHub Pages)
-
-1. Push your project files (`index.html` and `README.md`) to your GitHub repository.
-2. Go to your repository **Settings > Pages**.
-3. Under **Branch**, select `main` and click **Save**. Your enterprise SCADA dashboard will be live instantly!
