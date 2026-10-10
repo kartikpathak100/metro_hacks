@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b4f8a">
+<title>GMRC Master Dispatch & Headway Recommender - PS-04</title>
+<style>
+:root{--bg:#f3f5f8;--card:#fff;--ink:#14202b;--mut:#5b6775;--line:#dde2e9;--pri:#0b4f8a;--pri2:#e6f0fa;--ok:#1b7a3e;--okbg:#e5f4ea;--wn:#9a5b00;--wnbg:#fdf0d8;--bl:#0b4f8a;--blbg:#e6f0fa;--er:#b3261e;--tsame:#eef0f3;--pre:#f7f8fa;--inp:#fff;--onpri:#fff;--vn:#0f4d26;--vb:#5e3800;--vq:#083a68}
+:root[data-theme=dark]{--bg:#0e141b;--card:#18212b;--ink:#e8edf3;--mut:#9fb0c2;--line:#2b3846;--pri:#5aa9ee;--pri2:#16314a;--ok:#5fd18a;--okbg:#12301f;--wn:#f0b45a;--wnbg:#3a2a0c;--bl:#7db8f2;--blbg:#12304b;--er:#ff8a80;--tsame:#263240;--pre:#121a22;--inp:#121a22;--onpri:#07121c;--vn:#bfeccf;--vb:#fbe0b0;--vq:#c4def7}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI","Noto Sans Gujarati","Noto Sans Devanagari",sans-serif}
+
+.app{max-width:560px;margin:0 auto;min-height:100vh;padding:0 16px 110px}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px;gap:8px}
+.brand{font-weight:700;font-size:19px;color:var(--pri);letter-spacing:.2px}
+.lang{display:flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+.lang button{border:0;background:none;padding:8px 11px;font:600 15px inherit;font-family:inherit;color:var(--mut);min-height:40px}
+.lang button.on{background:var(--pri);color:var(--onpri)}
+
+h1{font-size:28px;line-height:1.2;margin:10px 0 2px}
+h2{font-size:19px;margin:26px 0 10px}
+.date{color:var(--mut);margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}
+.verdict{border-radius:16px;padding:20px;margin:6px 0 4px}
+.verdict b{display:block;font-size:24px;margin-bottom:4px}
+.v-n{background:var(--okbg);color:var(--vn)}.v-b{background:var(--wnbg);color:var(--vb)}.v-q{background:var(--blbg);color:var(--vq)}
+.opts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.opts.three{grid-template-columns:repeat(3,1fr)}
+.opt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:78px;padding:10px 6px;background:var(--card);border:2px solid var(--line);border-radius:14px;font:600 16px/1.2 inherit;font-family:inherit;color:var(--ink);text-align:center}
+.opt svg{width:26px;height:26px}
+.opt.on{border-color:var(--pri);background:var(--pri2);color:var(--pri)}
+.opt.row{width:100%;flex-direction:row;justify-content:flex-start;min-height:56px;padding:10px 14px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border:0;border-radius:14px;background:var(--pri);color:var(--onpri);font:700 18px inherit;font-family:inherit;margin-top:12px;text-decoration:none}
+.btn.alt{background:var(--card);color:var(--pri);border:2px solid var(--pri)}
+.btn svg{width:22px;height:22px}
+input[type=date],input[type=number],input[type=text],select{width:100%;min-height:52px;font:18px inherit;font-family:inherit;border:2px solid var(--line);border-radius:12px;padding:8px 12px;margin-top:6px;background:var(--inp);color:var(--ink)}
+.band{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.band.chg{border-left:6px solid var(--wn)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.top b{font-size:17px;color:var(--mut);font-weight:600}
+.tag{font:700 13px inherit;font-family:inherit;padding:4px 10px;border-radius:99px}
+.t-more{background:var(--wnbg);color:var(--wn)}.t-less{background:var(--blbg);color:var(--bl)}.t-same{background:var(--tsame);color:var(--mut)}
+.big{font-size:30px;font-weight:700;margin:6px 0 0}
+.sub{color:var(--mut);font-size:16px}
+.why{margin-top:8px;font-size:16px}
+.load{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:16px;font-weight:600}
+.dot{width:12px;height:12px;border-radius:50%}
+.link{border:0;background:none;color:var(--pri);font:700 16px inherit;font-family:inherit;padding:10px 0 0;min-height:44px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.chips .opt{min-height:48px;padding:6px 14px;flex-direction:row;font-size:17px}
+.err{color:var(--er);font-weight:600;font-size:15px}
+pre{white-space:pre-wrap;word-break:break-word;margin:12px 0 0;padding:14px;background:var(--pre);border:1px solid var(--line);border-radius:12px;font:16px/1.55 inherit;font-family:inherit}
+.stat{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0;border-bottom:1px solid var(--line)}
+.stat:last-of-type{border:0}.stat b{font-size:22px}.stat span{color:var(--mut);font-size:16px}
+.note{color:var(--mut);font-size:15px}
+details{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 18px;margin-bottom:12px}
+summary{min-height:52px;display:flex;align-items:center;font-weight:700;cursor:pointer}
+label{display:block;margin-top:12px;color:var(--mut);font-size:15px}
+
+/* --- Navigation Bar --- */
+nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 100;
+}
+nav div {
+  max-width: 560px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+nav button {
+  border: 0;
+  background: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 9px 0 8px;
+  font: 600 12px inherit;
+  font-family: inherit;
+  color: var(--mut);
+  min-height: 62px;
+  cursor: pointer;
+}
+nav button svg { width: 26px; height: 26px; }
+nav button.on { color: var(--pri); }
+
+.hide{display:none}
+#toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:#14202b;color:#fff;padding:10px 18px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;font-size:16px}
+#toast.on{opacity:1}
+button{cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #7fb2e5;outline-offset:2px}
+.ibtn{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;width:44px;height:42px;display:grid;place-items:center;padding:0}
+.ibtn svg{width:22px;height:22px}
+.map{width:100%;height:auto;display:block}.map text{fill:var(--ink);font:12px system-ui,sans-serif}.map .mt{font-weight:700}.map .sm{fill:var(--mut);font-size:11px}
+details label+input,details label+select{margin-top:4px}
+.back{margin-top:6px}
+
+/* --- Print Styles --- */
+@media print {
+  body { background: #fff !important; color: #000 !important; font-size: 12pt !important; }
+  nav, header .lang, header .ibtn, .btn, .link, .opts, details, .noprint { display: none !important; }
+  .app { max-width: 100% !important; padding: 0 !important; }
+  .card, .band { border: 1px solid #000 !important; box-shadow: none !important; background: #fff !important; color: #000 !important; page-break-inside: avoid; }
+  .dispatch-sheet { display: block !important; }
+}
+
+.dispatch-sheet { display: none; }
+
+/* --- Desktop Mode (Screens >= 840px) --- */
+@media (min-width: 840px) {
+  .app { max-width: 1080px; padding: 0 24px 40px; }
+  nav {
+    position: static;
+    border-top: none;
+    border-bottom: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 14px;
+    margin: 12px 0 24px 0;
+    padding: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  nav div { max-width: 100%; display: flex; justify-content: flex-start; gap: 8px; }
+  nav button { flex-direction: row; gap: 8px; min-height: 44px; padding: 8px 18px; border-radius: 10px; }
+  nav button.on { background: var(--pri2); color: var(--pri); }
+  #toast { bottom: 24px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="noprint">
+    <span class="brand" id="brand">Metro Planner</span>
+    <div style="display:flex;gap:8px">
+      <button class="ibtn" id="theme"></button>
+      <div class="lang" id="lang">
+        <button data-lang="en">EN</button>
+        <button data-lang="gu">ગુજ</button>
+        <button data-lang="hi">हिं</button>
+      </div>
+    </div>
+  </header>
+  
+  <nav class="noprint"><div id="nav"></div></nav>
+  
+  <main id="main"></main>
+</div>
+
+<div id="toast"></div>
+
+<script id="engine">
+"use strict";
+const LDEF_LADDER=[5,6,8,10,12,15,20];
+const LDEF_BANDS=[["06:00-08:00",2,15,2300],["08:00-11:00",3,10,3900],["11:00-16:00",5,15,2100],["16:00-20:00",4,10,4100],["20:00-22:00",2,15,1900],["22:00-24:00",2,20,650]].map(([label,hours,bh,pph])=>({label,hours,bh,pph}));
+const LDEF_EV={"None":[1,1,1,1,1,1],"IPL Match":[1,1,1.05,1.4,1,6],"Navratri Night":[1,1,1,1.15,1.8,4],"University Exams":[1.25,1.3,1.15,1,1,1]};
+const LDEF_WX={"Clear":[1,1,1,1,1,1],"Light Drizzle":[1.05,1.05,1.05,1.05,1.05,1.05],"Heavy Rain":[1.1,1.15,1.1,1.2,1.15,1.1],"Extreme Heat":[1,1.08,1.08,1.1,1.1,1]};
+
+let LADDER=[...LDEF_LADDER];
+let B=JSON.parse(JSON.stringify(LDEF_BANDS));
+let EV=JSON.parse(JSON.stringify(LDEF_EV));
+let WX=JSON.parse(JSON.stringify(LDEF_WX));
+
+const DY={"Weekday":[1,1,1,1,1,1],"Weekend/Holiday":[0.6,0.7,0.95,0.85,1.1,1]};
+const PDEF={cap:900,load:0.85,cycle:60,fleet:12,minH:5,maxH:20,quiet:0.75,fare:20,loss:0.5,cost:0};
+const PLABEL={cap:"Passengers per train",load:"Target max load (0.6-1)",cycle:"Round-trip time (min)",fleet:"Rakes available",minH:"Shortest safe headway (min)",maxH:"Longest headway (15 or 20)",fare:"Average fare (₹)",loss:"Overflow lost to road (0-1)",cost:"Cost per extra trip (₹, GMRC figure)"};
+const LG=["en","gu","hi"],LANGS={en:"English",gu:"ગુજરાતી",hi:"हिन्दी"};
+const FT={
+"IPL Match":{en:"IPL match crowd (stadium arrivals and departures)",gu:"IPL મેચની ભીડ (સ્ટેડિયમ તરફ આવનજાવન)",hi:"IPL मैच की भीड़ (स्टेडियम आना-जाना)"},
+"Navratri Night":{en:"Navratri night crowds",gu:"નવરાત્રિની રાત્રિની ભીડ",hi:"नवरात्रि की रात की भीड़"},
+"University Exams":{en:"university exam travel",gu:"યુનિવર્સિટી પરીક્ષા માટેની મુસાફરી",hi:"विश्वविद्यालय परीक्षा के लिए यात्रा"},
+"Heavy Rain":{en:"heavy rain (riders move from two-wheelers to the metro)",gu:"ભારે વરસાદ (ટુ-વ્હીલર છોડી મુસાફરો મેટ્રો તરફ વળે છે)",hi:"भारी बारिश (दोपहिया छोड़कर लोग मेट्रो की ओर)"},
+"Light Drizzle":{en:"light drizzle",gu:"હળવો ઝરમર વરસાદ",hi:"हल्की बूंदाबांदी"},
+"Extreme Heat":{en:"extreme heat (fewer people walk or ride two-wheelers)",gu:"અતિશય ગરમી (ચાલવા કે ટુ-વ્હીલર ચલાવવાનું ઓછું)",hi:"अत्यधिक गर्मी (पैदल या दोपहिया कम)"},
+"Weekend/Holiday":{en:"weekend or public holiday (fewer office commuters)",gu:"સપ્તાહાંત કે જાહેર રજા (ઓફિસ જનારા ઓછા)",hi:"सप्ताहांत या सार्वजनिक अवकाश (ऑफिस यात्री कम)"},
+"_":{en:"historical demand pattern",gu:"ઐતિહાસિક માંગની પેટર્ન",hi:"पिछले आंकड़ों का मांग पैटर्न"}};
+const TM={
+en:{s:"{band}: shorten headway {base} → {dyn} min ({rakes} rakes). Why: {why}.",l:"{band}: lengthen headway {base} → {dyn} min ({rakes} rakes). Why: {why}.",kw:"{band}: keep headway at {dyn} min ({rakes} rakes). Current service can absorb: {why}.",kn:"{band}: keep headway at {dyn} min ({rakes} rakes). Normal demand.",f:" Limited by fleet: only {fleet} rakes available.",o:" (Manual override by operator.)"},
+gu:{s:"{band}: ટ્રેનો વચ્ચેનું અંતર {base} → {dyn} મિનિટ કરો ({rakes} રેક). કારણ: {why}.",l:"{band}: ટ્રેનો વચ્ચેનું અંતર {base} → {dyn} મિનિટ વધારો ({rakes} રેક). કારણ: {why}.",kw:"{band}: અંતર {dyn} મિનિટ જ રાખો ({rakes} રેક). હાલની સેવા પૂરતી છે: {why}.",kn:"{band}: અંતર {dyn} મિનિટ જ રાખો ({rakes} રેક). સામાન્ય માંગ.",f:" રેકની મર્યાદા: ફક્ત {fleet} રેક ઉપલબ્ધ.",o:" (ઓપરેટરે જાતે ફેરફાર કર્યો.)"},
+hi:{s:"{band}: ट्रेनों का अंतराल {base} → {dyn} मिनट करें ({rakes} रेक)। कारण: {why}।",l:"{band}: ट्रेनों का अंतराल {base} → {dyn} मिनट बढ़ाएं ({rakes} रेक)। कारण: {why}।",kw:"{band}: अंतराल {dyn} मिनट ही रखें ({rakes} रेक)। मौजूदा सेवा पर्याप्त है: {why}।",kn:"{band}: अंतराल {dyn} मिनट ही रखें ({rakes} रेक)। सामान्य मांग।",f:" रेक की सीमा: केवल {fleet} रेक उपलब्ध।",o:" (ऑपरेटर द्वारा मैन्युअल बदलाव।)"}};
+const NM={
+ev:{"None":{en:"No special event",gu:"કોઈ ખાસ કાર્યક્રમ નથી",hi:"कोई विशेष आयोजन नहीं"},"IPL Match":{en:"IPL Match",gu:"IPL મેચ",hi:"IPL मैच"},"Navratri Night":{en:"Navratri Night",gu:"નવરાત્રિ રાત્રિ",hi:"नवरात्रि की रात"},"University Exams":{en:"University Exams",gu:"યુનિવર્સિટી પરીક્ષા",hi:"विश्वविद्यालय परीक्षा"}},
+wx:{"Clear":{en:"Clear",gu:"સ્વચ્છ હવામાન",hi:"साफ मौसम"},"Light Drizzle":{en:"Light Drizzle",gu:"હળવો ઝરમર વરસાદ",hi:"हल्की बूंदाबांदी"},"Heavy Rain":{en:"Heavy Rain",gu:"ભારે વરસાદ",hi:"भारी बारिश"},"Extreme Heat":{en:"Extreme Heat",gu:"અતિશય ગરમી",hi:"अत्यधिक गर्मी"}},
+dy:{"Weekday":{en:"Weekday",gu:"કામકાજનો દિવસ",hi:"कार्य दिवस"},"Weekend/Holiday":{en:"Weekend/Holiday",gu:"સપ્તાહાંત/જાહેર રજા",hi:"सप्ताहांत/सार्वजनिक अवकाश"}}};
+const WA={
+en:{t:"🚇 *Gujarat Metro - Headway Plan for {date}*",c:"Conditions: {day} | {wx} | {ev}",h:"*Train every ...*",l:"• {band}: every *{dyn} min* ({rakes} rakes, was {base})",ch:"*Changes and reasons:*",n:"No headway changes needed - run the normal timetable.",f:"Station controllers: please brief staff and update platform announcements.\n_Draft from planning tool - confirm with the control room before use._"},
+gu:{t:"🚇 *ગુજરાત મેટ્રો - {date} માટે ટ્રેન અંતરની યોજના*",c:"પરિસ્થિતિ: {day} | {wx} | {ev}",h:"*ટ્રેન દર ...*",l:"• {band}: દર *{dyn} મિનિટે* ({rakes} રેક, પહેલાં {base})",ch:"*ફેરફારો અને કારણો:*",n:"અંતરમાં કોઈ ફેરફારની જરૂર નથી - સામાન્ય ટાઇમટેબલ ચલાવો.",f:"સ્ટેશન કંટ્રોલર્સ: સ્ટાફને જાણ કરો અને પ્લેટဖોર્મ જાહેરાતો અપડેટ કરો.\n_આ ડ્રાફ્ટ છે - ઉપયોગ પહેલાં કંટ્રોલ રૂમ સાથે ખાતરી કરો._"},
+hi:{t:"🚇 *गुजरात मेट्रो - {date} के लिए ट्रेन अंतराल योजना*",c:"स्थिति: {day} | {wx} | {ev}",h:"*ट्रेन हर ...*",l:"• {band}: हर *{dyn} मिनट* पर ({rakes} रेक, पहले {base})",ch:"*बदलाव और कारण:*",n:"अंतराल में किसी बदलाव की जरूरत नहीं - सामान्य टाइमटेबल चलाएं।",f:"स्टेशन कंट्रोलर: कृपया स्टाफ को सूचित करें और प्लेटफ़ॉर्म घोषणाएं अपडेट करें।\n_यह मसौदा है - उपयोग से पहले कंट्रोल रूम से पुष्टि करें।_"}};
+
+const LDEF=[{id:"red",name:"Red Line",color:"#d93025",ends:["APMC","Motera Stadium"],level:1.1,cycle:60,fleet:9,w:{"IPL Match":1,"Navratri Night":0.7,"University Exams":1}},
+{id:"blue",name:"Blue Line",color:"#2b6fe0",ends:["Thaltej Gam","Vastral Gam"],level:0.9,cycle:60,fleet:8,w:{"IPL Match":0.4,"Navratri Night":0.7,"University Exams":1}}];
+let LINES=JSON.parse(JSON.stringify(LDEF)),RULES=[];
+const fmt=(s,o)=>s.replace(/\{(\w+)\}/g,(_,k)=>o[k]);
+const S={date:"",ev:"None",w:"Clear",hol:false,lang:"en",ov:{}};
+let P={...PDEF}, lookup={};
+
+function dayType(d,hol){const g=d.getDay();return(g===0||g===6||hol)?"Weekend/Holiday":"Weekday"}
+
+function ruleMult(i,ev,w,dt,ew=1){
+  let m=1; const f=[];
+  const evArr = EV[ev] || [1,1,1,1,1,1];
+  const wxArr = WX[w] || [1,1,1,1,1,1];
+  const dyArr = DY[dt] || [1,1,1,1,1,1];
+  for(const [n,v] of [[ev, 1 + ((evArr[i] ?? 1) - 1) * ew], [w, wxArr[i] ?? 1], [dt, dyArr[i] ?? 1]]){
+    m *= v;
+    if(Math.abs(v - 1) >= 0.05 && FT[n]) f.push(n);
+  }
+  return [m, f];
+}
+
+function customMult(i,ev,w,dt,date,lid){let m=1;const f=[];
+  for(const r of RULES){if(!r.on||!r.bands[i])continue;
+    if(r.ev!=="any"&&r.ev!==ev)continue;if(r.wx!=="any"&&r.wx!==w)continue;if(r.day!=="any"&&r.day!==dt)continue;
+    if(r.date&&r.date!==date)continue;if(r.line!=="all"&&r.line!==lid)continue;
+    m*=1+(+r.pct||0)/100;f.push("rule:"+r.id)}
+  return[m,f]}
+function ftx(f,lang){if(f.startsWith("rule:")){const r=RULES.find(x=>"rule:"+x.id===f);return r?(r.reason||r.name):""}return FT[f]?.[lang]||f}
+function decide(bh,dem,pph,p){
+  const req=p.cap*60*p.load/Math.max(dem,1);
+  const fl=Math.max(p.minH,Math.ceil(p.cycle/p.fleet));
+  const feas=LADDER.filter(h=>h>=fl&&h<=bh);
+  if(req<bh&&feas.length){const ok=feas.filter(h=>h<=req);return ok.length?[Math.max(...ok),false]:[Math.min(...feas),true]}
+  if(dem/pph<=p.quiet){const big=LADDER.filter(h=>h>bh&&h<=p.maxH&&h<=req);if(big.length)return[Math.min(...big),false]}
+  return[bh,false];
+}
+function plan(lid){const L=lid?LINES.find(l=>l.id===lid):null;
+  const d=new Date(S.date+"T00:00:00"),dt=dayType(d,S.hol),q={...P,quiet:0.75};if(L){q.cycle=L.cycle;q.fleet=L.fleet}
+  return B.map((b,i)=>{
+    const[rm,f0]=ruleMult(i,S.ev,S.w,dt,L?(L.w[S.ev]??1):1),[cm,cf]=customMult(i,S.ev,S.w,dt,S.date,lid||null),lv=L?L.level:1,bp=b.pph*lv,factors=f0.concat(cf);
+    const h=lookup[[b.label,S.ev,S.w,dt].join("|")];
+    let demand,basis;
+    if(h&&h.n>=3){demand=h.sum/h.n*lv;basis="History (n="+h.n+")"}else{demand=bp*rm;basis="Rules"}
+    demand*=cm;if(cm!==1)basis+=" + custom rules";
+    let[dyn,lim]=decide(b.bh,demand,bp,q);const auto=dyn,ov=lid?null:(S.ov[i]||null);
+    if(ov){dyn=ov;lim=false}
+    const cap=h2=>60/h2*P.cap;
+    return{band:b.label,hours:b.hours,base:b.bh,dyn,auto,ov:!!ov,fleet:q.fleet,
+      rb:Math.ceil(q.cycle/b.bh),rd:Math.ceil(q.cycle/dyn),demand,basis,factors,lim,
+      lfb:demand/cap(b.bh),lfd:demand/cap(dyn),
+      tb:b.hours*60/b.bh,td:b.hours*60/dyn,
+      sb:Math.max(0,demand-cap(b.bh))*b.hours,sd:Math.max(0,demand-cap(dyn))*b.hours,dt};
+  });
+}
+const safety=lf=>Math.min(100,Math.max(0,100-(lf-0.8)/0.7*100));
+function metrics(pl){
+  const w=pl.map(r=>r.demand*r.hours),W=w.reduce((a,b)=>a+b,0);
+  const csi=k=>pl.reduce((a,r,i)=>a+safety(r[k])*w[i],0)/W;
+  const saved=pl.reduce((a,r)=>a+r.sb-r.sd,0),extra=pl.reduce((a,r)=>a+r.td-r.tb,0);
+  const rev=saved*P.loss*P.fare,cost=Math.max(extra,0)*P.cost;
+  const co2=saved*0.00015;
+  const hoursSaved=saved*0.35;
+  return{cb:csi("lfb"),cd:csi("lfd"),saved,rev,extra,cost,net:rev-cost,changed:pl.filter(r=>r.dyn!==r.base).length,over:pl.filter(r=>r.rd>P.fleet).length,co2,hoursSaved};
+}
+function justLines(pl,lang,onlyChanged){
+  const T=TM[lang],out=[];
+  for(const r of pl){
+    const ch=r.dyn!==r.base;if(onlyChanged&&!ch)continue;
+    const why=r.factors.map(f=>ftx(f,lang)).filter(Boolean).join("; ")||FT._[lang];
+    const o={band:r.band,base:r.base,dyn:r.dyn,rakes:r.rd,why,fleet:r.fleet};
+    let s=r.dyn<r.base?fmt(T.s,o):r.dyn>r.base?fmt(T.l,o):r.factors.length?fmt(T.kw,o):fmt(T.kn,o);
+    if(r.lim)s+=fmt(T.f,o);if(r.ov)s+=T.o;out.push(s);
+  }
+  return out;
+}
+function waText(pl,lang){
+  const W=WA[lang],dt=pl[0].dt,[y,m,d]=S.date.split("-");
+  const L=[fmt(W.t,{date:`${d}-${m}-${y}`}),fmt(W.c,{day:NM.dy[dt][lang],wx:NM.wx[S.w][lang],ev:NM.ev[S.ev][lang]}),"",W.h];
+  pl.forEach(r=>L.push(fmt(W.l,{band:r.band,dyn:r.dyn,rakes:r.rd,base:r.base})));
+  L.push("");const c=justLines(pl,lang,true);
+  if(c.length){L.push(W.ch,...c.map(x=>"- "+x))}else L.push(W.n);
+  L.push("",W.f);return L.join("\n");
+}
+function parseCSV(txt){
+  const rows=txt.trim().split(/\r?\n/).map(l=>l.split(",").map(x=>x.trim()));
+  const h=rows.shift(),ix=n=>h.indexOf(n),need=["date","event_type","weather","time_band","avg_ridership"];
+  if(need.some(n=>ix(n)<0))throw new Error("Missing columns. Need: "+need.join(", "));
+  const lk={};let n=0;
+  for(const r of rows){const v=+r[ix("avg_ridership")];if(!(v>=0)||!r[ix("date")])continue;
+    const dt=dayType(new Date(r[ix("date")]+"T00:00:00"),false);
+    const k=[r[ix("time_band")],r[ix("event_type")],r[ix("weather")],dt].join("|");
+    (lk[k]=lk[k]||{sum:0,n:0});lk[k].sum+=v;lk[k].n++;n++}
+  return{lk,n};
+}
+const inr=x=>"₹"+Math.round(x).toLocaleString("en-IN");
+</script>
+<script id="ui">
+const IC={
+clear:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+Light:'<path d="M7 14a4 4 0 010-8 5 5 0 019.5 1.5A3.5 3.5 0 0116.5 14H7z"/><path d="M9 18v2M15 18v2"/>',
+Heavy:'<path d="M7 13a4 4 0 010-8 5 5 0 019.5 1.5A3.5 3.5 0 0116.5 13H7z"/><path d="M8 16l-1 4M12 16l-1 4M16 16l-1 4"/>',
+Extreme:'<path d="M10 14V5a2 2 0 014 0v9a4 4 0 11-4 0z"/><path d="M12 9v7"/>',
+none:'<circle cx="12" cy="12" r="8"/><path d="M6.5 17.5l11-11"/>',
+ipl:'<circle cx="12" cy="12" r="8"/><path d="M5 9c4 2 10 2 14 0M5 15c4-2 10-2 14 0"/>',
+nav:'<path d="M12 3l2 5 5 .5-4 3.5 1.3 5L12 14.5 7.7 17l1.3-5L5 8.5 10 8z"/>',
+exam:'<path d="M5 4h10a3 3 0 013 3v13H8a3 3 0 01-3-3V4z"/><path d="M5 17a3 3 0 013-3h10"/>',
+cal:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+home:'<path d="M4 11l8-7 8 7v9H4z"/>',
+clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+chat:'<path d="M4 5h16v11H9l-5 4z"/>',
+more:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
+copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/>',
+share:'<path d="M12 3v12M7 8l5-5 5 5M5 14v5h14v-5"/>',
+down:'<path d="M12 4v12M7 11l5 5 5-5M5 20h14"/>',moon:'<path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/>',map:'<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>'};
+const ic=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[n]}</svg>`;
+const I={
+en:{brand:"Metro Planner",plan:"Train plan",q_day:"Which day?",tomorrow:"Tomorrow",other:"Another day",q_wx:"How is the weather?",q_ev:"Any special event?",hol:"Public holiday",see:"See timetable",send:"Message for staff",
+n_home:"Home",n_tt:"Timetable",n_map:"Map",n_msg:"Message",n_more:"More",tt:"Timetable",every:"Every {n} min",was:"Before: {n} min",trains:"{n} trains needed",more_tr:"More trains",less_tr:"Fewer trains",same:"No change",
+l1:"Comfortable",l2:"Busy",l3:"Overcrowded",chg:"Change",auto:"Suggested",normal:"Normal demand",nofleet:"Not enough trains available",
+v_n_t:"Normal day",v_n_b:"No changes needed. Run the usual timetable.",v_b_t:"Busy day",v_b_b:"Run more trains: {b}.",v_q_t:"Quiet day",v_q_b:"Fewer trains are enough: {b}.",
+msg_t:"Message for station staff",copy:"Copy message",copied:"Copied",wa:"Share on WhatsApp",dl:"Save as text file",
+imp:"Estimated benefit",money:"Money protected",safe:"Safety score (out of 100)",extra:"Extra train trips",
+sample:"This is an estimate from sample data and assumptions. It is not real GMRC data. Please confirm with the control room.",
+set:"Master Settings & Matrix Editor",hist:"Past ridership file (optional)",hist_t:"Choose a CSV file of past ridership. Without it, the planner uses built-in rules.",reset:"Reset all defaults",off:"This page works without internet.",how:"How it works",
+how_t:"For each part of the day, the planner estimates how many people will travel, based on the day, weather and events. It then picks the shortest practical gap between trains that keeps them from getting too full, within the trains you have.",
+dispatch_btn:"🖨 Official Dispatch Order", crew_title:"Train Crew & Staffing Roster", station_title:"Key Interchange Crowd Risk",
+carbon_saved:"Est. CO2 Saved", time_saved:"Commuter Hours Saved", edit_matrix:"Edit Timebands & Multipliers"},
+gu:{brand:"મેટ્રો પ્લાનર",plan:"ટ્રેનની યોજના",q_day:"કયો દિવસ?",tomorrow:"આવતીકાલ",other:"બીજો દિવસ",q_wx:"હવામાન કેવું છે?",q_ev:"કોઈ ખાસ કાર્યક્રમ?",hol:"જાહેર રજા",see:"ટાઇમટેબલ જુઓ",send:"સ્ટાફ માટે સંદેશ",
+n_home:"હોમ",n_tt:"ટાઇમટેબલ",n_map:"નકશો",n_msg:"સંદેશ",n_more:"વધુ",tt:"ટાઇમટેબલ",every:"દર {n} મિનિટે",was:"પહેલાં: {n} મિનિટ",trains:"{n} ટ્રેન જોઈએ",more_tr:"વધુ ટ્રેન",less_tr:"ઓછી ટ્રેન",same:"ફેરફાર નથી",
+l1:"આરામદાયક",l2:"ભીડ",l3:"અતિશય ભીડ",chg:"બદલો",auto:"સૂચવેલ",normal:"સામાન્ય માંગ",nofleet:"પૂરતી ટ્રેન ઉપલબ્ધ નથી",
+v_n_t:"સામાન્ય દિવસ",v_n_b:"કોઈ ફેરફારની જરૂર નથી. રોજનું ટાઇમટેબલ ચલાવો.",v_b_t:"ભીડનો દિવસ",v_b_b:"વધુ ટ્રેન ચલાવો: {b}.",v_q_t:"શાંત દિવસ",v_q_b:"ઓછી ટ્રેન પૂરતી છે: {b}.",
+msg_t:"સ્ટેશન સ્ટાફ માટે સંદેશ",copy:"સંદેશ કૉપી કરો",copied:"કૉપી થઈ ગયું",wa:"વોટ્સએપ પર મોકલો",dl:"ટેક્સ્ટ ફાઇલ સાચવો",
+imp:"અંદાજિત ફાયદો",money:"બચાવેલી આવક",safe:"સુરક્ષા સ્કોર (100 માંથી)",extra:"વધારાની ટ્રેન ટ્રિપ",
+sample:"આ નમૂના ડેટા અને ધારણાઓ પરથી અંદાજ છે. તે GMRCનો સાચો ડેટા નથી. કૃપા કરીને કંટ્રોલ રૂમ સાથે ખાતરી કરો.",
+set:"સેટિંગ્સ અને મેટ્રિક્સ એડિટર",hist:"ભૂતકાળના મુસાફરોની ફાઇલ (વૈકલ્પિક)",hist_t:"ભૂતકાળના મુસાફરોની CSV ફાઇલ પસંદ કરો. વગર હોય તો પ્લાનર બિલ્ટ-ઇન નિયમો વાપરે છે.",reset:"બધા ડીફૉલ્ટ રીસેટ કરો",off:"આ પેજ ઇન્ટરનેટ વગર ચાલે છે.",how:"આ કેવી રીતે કામ કરે છે",
+how_t:"દિવસના દરેક ભાગ માટે, દિવસ, હવામાન અને કાર્યક્રમ મુજબ કેટલા લોકો મુસાફરી કરશે તેનો અંદાજ કાઢવામાં આવે છે. પછી ઉપલબ્ધ ટ્રેનની મર્યાદામાં, ટ્રેન બહુ ભરાઈ ન જાય એવું સૌથી ટૂંકું વ્યવહારુ અંતર પસંદ થાય છે.",
+dispatch_btn:"🖨 અધિકૃત ડિસ્પાચ ઓર્ડર", crew_title:"ટ્રેન ક્રૂ અને સ્ટાફ રોસ્ટર", station_title:"મુખ્ય સ્ટેશન ભીડ જોખમ",
+carbon_saved:"બચાવેલ CO2", time_saved:"મુસાફરોના બચેલા કલાક", edit_matrix:"સમય અને મલ્ટિપ્લાયર સંપાદિત કરો"},
+hi:{brand:"मेट्रो प्लानर",plan:"ट्रेन योजना",q_day:"कौन सा दिन?",tomorrow:"कल",other:"दूसरा दिन",q_wx:"मौसम कैसा है?",q_ev:"कोई विशेष आयोजन?",hol:"सार्वजनिक अवकाश",see:"टाइमटेबल देखें",send:"स्टाफ के लिए संदेश",
+n_home:"होम",n_tt:"टाइमटेबल",n_map:"नक्शा",n_msg:"संदेश",n_more:"और",tt:"टाइमटेबल",every:"हर {n} मिनट",was:"पहले: {n} मिनट",trains:"{n} ट्रेन चाहिए",more_tr:"ज़्यादा ट्रेन",less_tr:"कम ट्रेन",same:"कोई बदलाव नहीं",
+l1:"आरामदायक",l2:"भीड़",l3:"बहुत भीड़",chg:"बदलें",auto:"सुझाया गया",normal:"सामान्य मांग",nofleet:"पर्याप्त ट्रेन उपलब्ध नहीं",
+v_n_t:"सामान्य दिन",v_n_b:"कोई बदलाव नहीं चाहिए। रोज़ का टाइमटेबल चलाएं।",v_b_t:"भीड़ वाला दिन",v_b_b:"ज़्यादा ट्रेन चलाएं: {b}।",v_q_t:"शांत दिन",v_q_b:"कम ट्रेन काफी हैं: {b}।",
+msg_t:"स्टेशन स्टाफ के लिए संदेश",copy:"संदेश कॉपी करें",copied:"कॉपी हो गया",wa:"व्हाट्सऐप पर भेजें",dl:"टेक्स्ट फ़ाइल सेव करें",
+imp:"अनुमानित लाभ",money:"बचाई गई आय",safe:"सुरक्षा स्कोर (100 में से)",extra:"अतिरिक्त ट्रेन फेरे",
+sample:"यह नमूना डेटा और मान्यताओं पर आधारित अनुमान है। यह GMRC का असली डेटा नहीं है। कृपया कंट्रोल रूम से पुष्टि करें।",
+set:"सेटिंग्स और मैट्रिक्स एडिटर",hist:"पिछले यात्री आंकड़ों की फ़ाइल (वैकल्पिक)",hist_t:"पिछले यात्री आंकड़ों की CSV फ़ाइल चुनें। इसके बिना प्लानर बने-बनाए नियम इस्तेमाल करता है।",reset:"सभी डिफ़ॉल्ट रीसेट करें",off:"यह पेज बिना इंटरनेट के चलता है।",how:"यह कैसे काम करता है",
+how_t:"दिन के हर हिस्से के लिए, दिन, मौसम और आयोजन के आधार पर अनुमान लगाया जाता है कि कितने लोग यात्रा करेंगे। फिर उपलब्ध ट्रेनों की सीमा में, ट्रेन ज़्यादा न भरे इतना सबसे छोटा व्यावहारिक अंतराल चुना जाता है।",
+dispatch_btn:"🖨 आधिकारिक प्रेषण आदेश", crew_title:"क्रू और स्टाफ रोस्टर", station_title:"प्रमुख स्टेशन भीड़ जोखिम",
+carbon_saved:"बचाया गया CO2", time_saved:"यात्रियों के बचे घंटे", edit_matrix:"समय और गुणक संपादित करें"}};
+Object.assign(I.en,{n_map:"Map",map_h:"Where more trains are needed",map_sub:"Simple diagram, not to scale. How demand is split between lines is an assumption.",map_time:"Time of day",all_lines:"All lines",l_more:"More trains: {x}",l_less:"Fewer trains: {x}",l_none:"No changes needed all day.",inter:"Interchange",ex:"{n} trains",back:"Back",rules_h:"My rules",rules_t:"Add your own rules, such as a local festival or a road closure. They change the demand estimate and appear in the reasons. Rules for All lines also affect the Timetable and Message.",add_rule:"Add a rule",lines_h:"Lines (names, trains, demand)",rn:"Rule name",ev_l:"Event",wx_l:"Weather",day_l:"Day type",date_l:"Only on this date (optional)",eff_l:"Change in passengers (%)",eff_h:"Use a minus sign for fewer.",times_l:"Times of day",line_l:"Which line",why_l:"Reason shown to staff",rule_on:"Rule is on",rule_off:"Rule is off",del:"Delete rule",any:"Any",new_rule:"New rule",lvl:"Demand level (1 = average)",cyc:"Round trip (minutes)",flt:"Trains available",shr:"crowd share (0 to 1)",ln_name:"Line name",ln_ends:"End station"});
+Object.assign(I.gu,{n_map:"નકશો",map_h:"ક્યાં વધુ ટ્રેન જોઈએ",map_sub:"સરળ આકૃતિ, માપ મુજબ નથી. લાઇન વચ્ચે માંગની વહેંચણી ધારણા છે.",map_time:"દિવસનો સમય",all_lines:"બધી લાઇન",l_more:"વધુ ટ્રેન: {x}",l_less:"ઓછી ટ્રેન: {x}",l_none:"આખા દિવસ કોઈ ફેરફાર નથી.",inter:"ઇન્ટરચેન્જ",ex:"{n} ટ્રેન",back:"પાછા",rules_h:"મારા નિયમો",rules_t:"તમારા પોતાના નિયમો ઉમેરો, જેમ કે સ્થાનિક તહેવાર કે રસ્તો બંધ. તે માંગના અંદાજને બદલે છે અને કારણોમાં દેખાય છે. 'બધી લાઇન'ના નિયમો ટાઇમટેબલ અને સંદેશને પણ અસર કરે છે.",add_rule:"નિયમ ઉમેરો",lines_h:"લાઇન (નામ, ટ્રેન, માંગ)",rn:"નિયમનું નામ",ev_l:"કાર્યક્રમ",wx_l:"હવામાન",day_l:"દિવસનો પ્રકાર",date_l:"ફક્ત આ તારીખે (વૈકલ્પિક)",eff_l:"મુસાફરોમાં ફેરફાર (%)",eff_h:"ઓછા માટે માઇનસ વાપરો.",times_l:"દિવસના સમય",line_l:"કઈ લાઇન",why_l:"સ્ટાફને દેખાતું કારણ",rule_on:"નિયમ ચાલુ છે",rule_off:"નિયમ બંધ છે",del:"નિયમ કાઢી નાખો",any:"કોઈપણ",new_rule:"નવો નિયમ",lvl:"માંગનું સ્તર (1 = સરેરાશ)",cyc:"આવનજાવન સમય (મિનિટ)",flt:"ઉપલબ્ધ ટ્રેન",shr:"ભીડનો હિસ્સો (0 થી 1)",ln_name:"લાઇનનું નામ",ln_ends:"છેલ્લું સ્ટેશન"});
+Object.assign(I.hi,{n_map:"नक्शा",map_h:"कहाँ ज़्यादा ट्रेन चाहिए",map_sub:"सरल चित्र, पैमाने के अनुसार नहीं। लाइनों के बीच मांग का बंटवारा एक मान्यता है।",map_time:"दिन का समय",all_lines:"सभी लाइन",l_more:"ज़्यादा ट्रेन: {x}",l_less:"कम ट्रेन: {x}",l_none:"पूरे दिन कोई बदलाव नहीं।",inter:"इंटरचेंज",ex:"{n} ट्रेन",back:"वापस",rules_h:"मेरे नियम",rules_t:"अपने नियम जोड़ें, जैसे स्थानीय त्योहार या सड़क बंद। ये मांग के अनुमान को बदलते हैं और कारणों में दिखते हैं। 'सभी लाइन' के नियम टाइमटेबल और संदेश पर भी असर डालते हैं।",add_rule:"नियम जोड़ें",lines_h:"लाइन (नाम, ट्रेन, मांग)",rn:"Rule name",ev_l:"आयोजन",wx_l:"मौसम",day_l:"दिन का प्रकार",date_l:"केवल इस तारीख को (वैकल्पिक)",eff_l:"यात्रियों में बदलाव (%)",eff_h:"कम के लिए माइनस लगाएं।",times_l:"दिन के समय",line_l:"कौन सी लाइन",why_l:"स्टेशन स्टाफ को दिखने वाला कारण",rule_on:"नियम चालू है",rule_off:"नियम बंद है",del:"नियम हटाएं",any:"कोई भी",new_rule:"नया नियम",lvl:"मांग स्तर (1 = औसत)",cyc:"आना-जाना समय (मिनट)",flt:"उपलब्ध ट्रेन",shr:"भीड़ का हिस्सा (0 से 1)",ln_name:"लाइन का नाम",ln_ends:"अंतिम स्टेशन"});
+const $=id=>document.getElementById(id),T=k=>I[S.lang][k],LOC={en:"en-IN",gu:"gu-IN",hi:"hi-IN"};
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let screen="home",openBand=null,mlang=null,dmode="tomorrow",tl=null,mapBand=null,openRule=null;
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),1500)}
+const opt=(g,v,label,icon,on,cls="")=>`<button class="opt ${cls} ${on?"on":""}" data-g="${g}" data-v="${v}">${ic(icon)}<span>${label}</span></button>`;
+function verdict(pl){
+  const sh=pl.filter(r=>r.dyn<r.base).map(r=>r.band),lg=pl.filter(r=>r.dyn>r.base).map(r=>r.band);
+  if(!sh.length&&!lg.length)return{c:"v-n",t:T("v_n_t"),b:T("v_n_b")};
+  const b=[];if(sh.length)b.push(fmt(T("v_b_b"),{b:sh.join(", ")}));if(lg.length)b.push(fmt(T("v_q_b"),{b:lg.join(", ")}));
+  return{c:sh.length?"v-b":"v-q",t:T(sh.length?"v_b_t":"v_q_t"),b:b.join(" ")};
+}
+function dateStr(){return new Date(S.date+"T00:00:00").toLocaleDateString(LOC[S.lang],{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
+const WXI={"Clear":"clear","Light Drizzle":"Light","Heavy Rain":"Heavy","Extreme Heat":"Extreme"},EVI={"None":"none","IPL Match":"ipl","Navratri Night":"nav","University Exams":"exam"};
+function home(pl){
+  const v=verdict(pl);
+  return `<h1>${T("plan")}</h1><p class="date">${dateStr()}</p>
+  <div class="verdict ${v.c}"><b>${v.t}</b>${v.b}</div>
+  <h2>${T("q_day")}</h2><div class="opts">${opt("day","tomorrow",T("tomorrow"),"cal",dmode==="tomorrow")}${opt("day","other",T("other"),"cal",dmode==="other")}</div>
+  ${dmode==="other"?`<input type="date" id="dpick" value="${S.date}">`:""}
+  <h2>${T("q_wx")}</h2><div class="opts">${Object.keys(WX).map(k=>opt("wx",k,NM.wx[k][S.lang],WXI[k],S.w===k)).join("")}</div>
+  <h2>${T("q_ev")}</h2><div class="opts">${Object.keys(EV).map(k=>opt("ev",k,NM.ev[k][S.lang],EVI[k],S.ev===k)).join("")}</div>
+  <div style="margin-top:10px">${opt("hol","x",T("hol"),"cal",S.hol,"row")}</div>
+  <button class="btn" data-go="tt">${ic("clock")}${T("see")}</button><button class="btn alt" data-go="msg">${ic("chat")}${T("send")}</button>`;
+}
+function timetable(){
+  const pl=plan(tl);
+  return `<h1>${T("tt")}</h1><p class="date">${dateStr()}</p>`+lineChips()+
+  `<button class="btn alt" style="margin-bottom:14px" data-act="dispatch">${T("dispatch_btn")}</button>`+
+  pl.map((r,i)=>{
+    const up=r.dyn<r.base,dn=r.dyn>r.base,why=r.factors.map(f=>esc(ftx(f,S.lang))).filter(Boolean).join("; ")||T("normal"),
+      lc=r.lfd<=P.load?["var(--ok)","l1"]:r.lfd<=1?["var(--wn)","l2"]:["var(--er)","l3"];
+    return `<div class="band ${up||dn?"chg":""}"><div class="top"><b>${r.band}</b><span class="tag ${up?"t-more":dn?"t-less":"t-same"}">${T(up?"more_tr":dn?"less_tr":"same")}</span></div>
+    <div class="big">${fmt(T("every"),{n:r.dyn})}</div>
+    <div class="sub">${up||dn?fmt(T("was"),{n:r.base})+" · ":""}${fmt(T("trains"),{n:r.rd})}</div>
+    ${r.rd>r.fleet?`<div class="err">${T("nofleet")}</div>`:""}
+    <div class="why">${why.charAt(0).toUpperCase()+why.slice(1)}</div>
+    <div class="load"><i class="dot" style="background:${lc[0]}"></i>${T(lc[1])}</div>
+    ${tl?"":`<button class="link" data-open="${i}">${T("chg")} ›</button>`}
+    ${openBand===i?`<div class="chips">${opt("set",i+":0",T("auto")+" ("+r.auto+")","clock",!r.ov)}${LADDER.map(h=>opt("set",i+":"+h,h+" min","clock",r.ov&&r.dyn===h)).join("")}</div>`:""}</div>`}).join("");
+}
+function message(pl){
+  const ml=mlang||S.lang,t=waText(pl,ml);
+  return `<h1>${T("msg_t")}</h1><div class="opts three" style="margin-top:12px">${LG.map(l=>`<button class="opt ${ml===l?"on":""}" style="min-height:52px" data-ml="${l}">${LANGS[l]}</button>`).join("")}</div>
+  <pre id="msgtxt">${t.replace(/</g,"&lt;")}</pre>
+  <button class="btn" data-act="copy">${ic("copy")}${T("copy")}</button>
+  <a class="btn alt" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(t)}">${ic("share")}${T("wa")}</a>
+  <button class="btn alt" data-act="dl">${ic("down")}${T("dl")}</button>`;
+}
+function more(pl){
+  const m=metrics(pl),maxRakes=Math.max(...pl.map(r=>r.rd));
+  const opCount=Math.round(maxRakes*1.5), standby=Math.round(maxRakes*0.4);
+  return `<h1>${T("n_more")}</h1><h2>${T("imp")}</h2><div class="card">
+  <div class="stat"><span>${T("money")}</span><b>${inr(m.rev)}</b></div>
+  <div class="stat"><span>${T("safe")}</span><b>${m.cb.toFixed(0)} → ${m.cd.toFixed(0)}</b></div>
+  <div class="stat"><span>${T("extra")}</span><b>${(m.extra>=0?"+":"")+m.extra.toFixed(0)}</b></div>
+  <div class="stat"><span>${T("carbon_saved")}</span><b>${m.co2.toFixed(1)} Tons</b></div>
+  <div class="stat"><span>${T("time_saved")}</span><b>${m.hoursSaved.toFixed(0)} Hours</b></div>
+  <p class="note" style="margin:10px 0 0">${T("sample")}</p></div>
+  
+  <h2>${T("crew_title")}</h2><div class="card">
+  <div class="stat"><span>Active Train Operators</span><b>${opCount}</b></div>
+  <div class="stat"><span>Standby Crew & Technicians</span><b>${standby}</b></div>
+  <div class="stat"><span>Station Controllers (All Stops)</span><b>24</b></div></div>
+
+  <button class="btn" data-go="rules">${T("rules_h")} ›</button>
+  <button class="btn alt" data-go="matrix">${T("edit_matrix")} ›</button><p></p>
+
+  <details open><summary>${T("set")}</summary>${Object.keys(PLABEL).map(k=>`<label>${PLABEL[k]}</label><input type="number" step="any" data-k="${k}" value="${P[k]}">`).join("")}<button class="btn alt" data-act="reset">${T("reset")}</button><p></p></details>
+  <details><summary>${T("hist")}</summary><p class="note">${T("hist_t")}</p><input type="file" accept=".csv" id="csv"><p class="note" id="csvInfo"></p></details>
+  <p class="note">${T("off")}</p>`;
+}
+function matrixScreen(){
+  return `<button class="link back" data-go="more">‹ ${T("back")}</button>
+  <h1>Master Matrix Editor</h1><p class="note">Customize time bands, baseline passenger demand, headway ladders, and event multipliers live.</p>
+  
+  <div class="card">
+    <h2>Allowed Headways (Ladder in minutes)</h2>
+    <input type="text" id="mat_ladder" value="${LADDER.join(", ")}">
+    <p class="note">Comma-separated numbers (e.g. 5, 6, 8, 10, 12, 15, 20)</p>
+  </div>
+
+  <div class="card">
+    <h2>Time Bands & Base Demand (PPH)</h2>
+    ${B.map((b,i)=>`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div><label>Label</label><input type="text" data-mb-i="${i}" data-mb-k="label" value="${b.label}"></div>
+      <div><label>Base PPH</label><input type="number" data-mb-i="${i}" data-mb-k="base_pph" value="${b.pph}"></div>
+    </div>`).join("")}
+  </div>
+
+  <div class="card">
+    <h2>Event Surge Multipliers (Bands 1-6)</h2>
+    ${Object.keys(EV).map(ev=>`<label><b>${ev}</b></label><input type="text" data-ev-name="${ev}" value="${EV[ev].join(", ")}"><p class="note" style="margin:2px 0 6px">6 comma-separated multipliers</p>`).join("")}
+  </div>
+  <button class="btn" data-act="savemat">Save & Recalculate All</button>`;
+}
+function lineChips(){return `<div class="chips" style="margin:0 0 14px">${[["",T("all_lines")],...LINES.map(l=>[l.id,l.name])].map(([id,n])=>`<button class="opt ${(tl||"")===id?"on":""}" data-tl="${id}">${esc(n)}</button>`).join("")}</div>`}
+function mapScreen(){
+  const per=LINES.map(l=>({l,pl:plan(l.id)}));
+  if(mapBand===null){let bs=-1,bi=0;for(let i=0;i<B.length;i++){const s=per.reduce((a,x)=>a+Math.max(0,x.pl[i].rd-x.pl[i].rb)*10+x.pl[i].lfb,0);if(s>bs){bs=s;bi=i}}mapBand=bi}
+  const i=mapBand,stt=x=>{const r=x.pl[i],ex=r.rd-r.rb;return ex>0?["var(--wn)","var(--wnbg)",fmt(T("ex"),{n:"+"+ex})]:ex<0?["var(--bl)","var(--blbg)",fmt(T("ex"),{n:ex})]:["var(--ok)","var(--okbg)",T("same")]};
+  const [a,b]=per,sa=stt(a),sb=stt(b),dot=(x,y,c)=>`<circle cx="${x}" cy="${y}" r="5" fill="var(--card)" stroke="${c}" stroke-width="2.5"/>`;
+  const badge=(x,y,s,x2)=>`<rect x="${x}" y="${y}" width="132" height="60" rx="10" fill="${s[1]}" stroke="${s[0]}" stroke-width="2"/><text class="mt" x="${x+10}" y="${y+18}">${esc(x2.l.name)}</text><text class="mt" x="${x+10}" y="${y+37}" style="fill:${s[0]}">${s[2]}</text><text class="sm" x="${x+10}" y="${y+53}">${fmt(T("every"),{n:x2.pl[i].dyn})}</text>`;
+  const svg=`<svg class="map" viewBox="0 0 340 372" role="img"><line x1="110" y1="34" x2="110" y2="330" stroke="${a.l.color}" stroke-width="10" stroke-linecap="round"/><line x1="24" y1="190" x2="320" y2="190" stroke="${b.l.color}" stroke-width="10" stroke-linecap="round"/>
+  ${[34,92,140,246,288,330].map(y=>dot(110,y,a.l.color)).join("")}${[24,66,170,222,270,320].map(x=>dot(x,190,b.l.color)).join("")}
+  <circle cx="110" cy="190" r="10" fill="var(--card)" stroke="var(--ink)" stroke-width="3"/><text class="sm" x="72" y="218">${T("inter")}</text>
+  <text class="sm" x="110" y="18" text-anchor="middle">${esc(a.l.ends[1])}</text><text class="sm" x="110" y="352" text-anchor="middle">${esc(a.l.ends[0])}</text>
+  <text class="sm" x="24" y="172">${esc(b.l.ends[0])}</text><text class="sm" x="320" y="172" text-anchor="end">${esc(b.l.ends[1])}</text>
+  ${badge(128,46,sa,a)}${badge(176,236,sb,b)}</svg>`;
+  return `<h1>${T("map_h")}</h1><p class="note">${T("map_sub")}</p>
+  <h2 style="margin-top:14px">${T("map_time")}</h2><div class="chips">${B.map((x,k)=>`<button class="opt ${i===k?"on":""}" data-mb="${k}">${x.label}</button>`).join("")}</div>
+  <div class="card" style="margin-top:14px">${svg}</div>`+per.map(x=>{
+    const r=x.pl[i],mo=x.pl.filter(q=>q.rd>q.rb).map(q=>`${q.band} (+${q.rd-q.rb})`),le=x.pl.filter(q=>q.rd<q.rb).map(q=>`${q.band} (${q.rd-q.rb})`),
+      lc=r.lfd<=P.load?["var(--ok)","l1"]:r.lfd<=1?["var(--wn)","l2"]:["var(--er)","l3"];
+    return `<div class="band" style="border-left:6px solid ${x.l.color}"><div class="top"><b style="color:var(--ink);font-size:19px">${esc(x.l.name)}</b><span class="load" style="margin:0"><i class="dot" style="background:${lc[0]}"></i>${T(lc[1])}</span></div>
+    <div class="big">${fmt(T("every"),{n:r.dyn})}</div><div class="sub">${r.dyn!==r.base?fmt(T("was"),{n:r.base})+" · ":""}${fmt(T("trains"),{n:r.rd})}</div>
+    ${r.rd>r.fleet?`<div class="err">${T("nofleet")}</div>`:""}
+    <div class="why">${mo.length?fmt(T("l_more"),{x:mo.join(", ")}):""} ${le.length?fmt(T("l_less"),{x:le.join(", ")}):""}${!mo.length&&!le.length?T("l_none"):""}</div></div>`}).join("");
+}
+const sel=(at,v,o)=>`<select ${at}>${o.map(([k,l])=>`<option value="${esc(k)}" ${k===v?"selected":""}>${esc(l)}</option>`).join("")}</select>`;
+function ruleCard(r){
+  const a=f=>`data-r="${r.id}" data-f="${f}"`,ln=[["all",T("all_lines")],...LINES.map(l=>[l.id,l.name])];
+  return `<details data-rid="${r.id}" ${openRule===r.id?"open":""}><summary>${esc(r.name||T("new_rule"))}${r.on?"":" ("+T("rule_off")+")"}</summary>
+  <label>${T("rn")}</label><input type="text" ${a("name")} value="${esc(r.name)}">
+  <label>${T("ev_l")}</label>${sel(a("ev"),r.ev,[["any",T("any")],...Object.keys(EV).map(k=>[k,NM.ev[k]?.[S.lang]||k])])}
+  <label>${T("wx_l")}</label>${sel(a("wx"),r.wx,[["any",T("any")],...Object.keys(WX).map(k=>[k,NM.wx[k]?.[S.lang]||k])])}
+  <label>${T("day_l")}</label>${sel(a("day"),r.day,[["any",T("any")],...Object.keys(DY).map(k=>[k,NM.dy[k]?.[S.lang]||k])])}
+  <label>${T("date_l")}</label><input type="date" ${a("date")} value="${esc(r.date)}">
+  <label>${T("eff_l")} · ${T("eff_h")}</label><input type="number" step="1" ${a("pct")} value="${r.pct}">
+  <label>${T("times_l")}</label><div class="chips">${B.map((b,i)=>`<button class="opt ${r.bands[i]?"on":""}" data-rb="${r.id}:${i}">${b.label}</button>`).join("")}</div>
+  <label>${T("line_l")}</label>${sel(a("line"),r.line,ln)}
+  <label>${T("why_l")}</label><input type="text" ${a("reason")} value="${esc(r.reason)}">
+  <button class="btn alt" data-rt="${r.id}">${r.on?T("rule_on"):T("rule_off")}</button><button class="btn alt" style="color:var(--er);border-color:var(--er)" data-rd="${r.id}">${T("del")}</button><p></p></details>`}
+function rulesScreen(){
+  return `<button class="link back" data-go="more">‹ ${T("back")}</button><h1>${T("rules_h")}</h1><p class="note">${T("rules_t")}</p>`+RULES.map(ruleCard).join("")+
+  `<button class="btn" data-act="addrule">+ ${T("add_rule")}</button>`;
+}
+function dispatchScreen(){
+  const pl=plan(), m=metrics(pl);
+  const [y,mth,d]=S.date.split("-");
+  return `<button class="link back" data-go="tt">‹ ${T("back")}</button>
+  <div class="card" style="margin-top:14px; border: 2px solid var(--pri);">
+    <div style="text-align:center; border-bottom: 2px solid var(--line); padding-bottom: 12px; margin-bottom: 14px;">
+      <h2 style="margin:0; color:var(--pri);">GUJARAT METRO RAIL CORPORATION (GMRC)</h2>
+      <p style="margin:4px 0 0; font-weight:700;">CONTROL ROOM DAILY HEADWAY & DISPATCH ORDER</p>
+      <p class="note" style="margin:2px 0 0">Ref: GMRC/OPS/DS/${S.date}/04</p>
+    </div>
+    <div class="stat"><span>Date</span><b>${d}-${mth}-${y}</b></div>
+    <div class="stat"><span>Active Conditions</span><b>${NM.dy[pl[0].dt]?.[S.lang]||pl[0].dt} | ${NM.wx[S.w]?.[S.lang]||S.w} | ${NM.ev[S.ev]?.[S.lang]||S.ev}</b></div>
+    <div class="stat"><span>Total Revenue Protected</span><b>${inr(m.rev)}</b></div>
+    
+    <h3 style="margin:16px 0 8px">Authorized Timeband Headway Schedule</h3>
+    <table>
+      <tr><th>Band</th><th>Headway</th><th>Rakes</th><th>Load</th></tr>
+      ${pl.map(r=>`<tr><td><b>${r.band}</b></td><td><b>${r.dyn} min</b> (was${r.base})</td><td>${r.rd} rakes</td><td>${(r.lfd*100).toFixed(0)}%</td></tr>`).join("")}
+    </table>
+
+    <div style="margin-top:24px; display:grid; grid-template-columns:1fr 1fr; gap:20px; text-align:center">
+      <div style="border-top:1px solid var(--ink); padding-top:6px"><b>Station Controller</b><br><span class="note">Signature & Stamp</span></div>
+      <div style="border-top:1px solid var(--ink); padding-top:6px"><b>Chief Controller (OCC)</b><br><span class="note">Authorized Sign-off</span></div>
+    </div>
+  </div>
+  <button class="btn noprint" onclick="window.print()">${T("dispatch_btn")}</button>`;
+}
+function setTheme(m){document.documentElement.dataset.theme=m;store.set("mh_theme",m);$("theme").innerHTML=ic(m==="dark"?"clear":"moon");$("theme").setAttribute("aria-label",m==="dark"?"Light mode":"Dark mode")}
+function render(){
+  const pl=window._pl=plan();
+  $("main").innerHTML={home,tt:timetable,map:mapScreen,msg:message,more,rules:rulesScreen,dispatch:dispatchScreen,matrix:matrixScreen}[screen](pl);
+  $("nav").innerHTML=[["home","home","n_home"],["tt","clock","n_tt"],["map","map","n_map"],["msg","chat","n_msg"],["more","more","n_more"]].map(([k,i,l])=>`<button data-go="${k}" class="${(screen==="rules"||screen==="dispatch"||screen==="matrix"?"more":screen)===k?"on":""}">${ic(i)}${T(l)}</button>`).join("");
+  document.querySelectorAll("#lang button").forEach(b=>b.classList.toggle("on",b.dataset.lang===S.lang));
+  $("brand").textContent=T("brand");document.documentElement.lang=S.lang;
+}
+function go(s){screen=s;openBand=null;render();scrollTo(0,0)}
+document.addEventListener("click",async e=>{
+  const el=e.target.closest("button,a");if(!el)return;const d=el.dataset;
+  if(el.id==="theme")return setTheme(document.documentElement.dataset.theme==="dark"?"light":"dark");
+  if(d.tl!==undefined)return(tl=d.tl||null,render());
+  if(d.mb!==undefined)return(mapBand=+d.mb,render());
+  if(d.act==="dispatch")return go("dispatch");
+  if(d.act==="matrix")return go("matrix");
+  if(d.act==="savemat"){
+    try{
+      const ladTxt=$("mat_ladder").value;
+      LADDER=ladTxt.split(",").map(x=>parseFloat(x.trim())).filter(x=>!isNaN(x)&&x>0);
+      document.querySelectorAll("[data-mb-i]").forEach(inp=>{
+        const i=+inp.dataset.mbI, k=inp.dataset.mbK;
+        if(k==="label") B[i].label=inp.value;
+        if(k==="base_pph") B[i].pph=parseFloat(inp.value)||B[i].pph;
+      });
+      document.querySelectorAll("[data-ev-name]").forEach(inp=>{
+        const ev=inp.dataset.evName;
+        const vals=inp.value.split(",").map(x=>parseFloat(x.trim())).filter(x=>!isNaN(x));
+        if(vals.length===6) EV[ev]=vals;
+      });
+      store.set("mh_ladder",LADDER); store.set("mh_bands",B); store.set("mh_ev",EV);
+      toast("Master matrix saved!"); go("more");
+    }catch(err){alert("Error saving: "+err.message)}
+  }
+  if(d.act==="addrule"){const id=Date.now().toString(36);RULES.push({id,name:"",on:true,ev:"any",wx:"any",day:"any",date:"",pct:20,bands:[true,true,true,true,true,true],line:"all",reason:""});openRule=id;store.set("mh_rules",RULES);return render()}
+  if(d.rb){const[id,i]=d.rb.split(":"),r=RULES.find(x=>x.id===id);if(r){r.bands[+i]=!r.bands[+i];store.set("mh_rules",RULES)}return render()}
+  if(d.rt){const r=RULES.find(x=>x.id===d.rt);if(r){r.on=!r.on;store.set("mh_rules",RULES)}return render()}
+  if(d.rd){if(confirm(T("del")+"?")){RULES=RULES.filter(x=>x.id!==d.rd);store.set("mh_rules",RULES)}return render()}
+  if(d.lang){S.lang=d.lang;mlang=null;store.set("mh_lang",S.lang);return render()}
+  if(d.go)return go(d.go);
+  if(d.g==="day"){dmode=d.v;if(d.v==="tomorrow"){const t=new Date();t.setDate(t.getDate()+1);S.date=iso(t)}S.ov={};mapBand=null;return render()}
+  if(d.g==="wx"){S.w=d.v;S.ov={};mapBand=null;return render()}
+  if(d.g==="ev"){S.ev=d.v;S.ov={};mapBand=null;return render()}
+  if(d.g==="hol"){S.hol=!S.hol;S.ov={};mapBand=null;return render()}
+  if(d.open!==undefined){openBand=openBand==+d.open?null:+d.open;return render()}
+  if(d.g==="set"){const[i,h]=d.v.split(":").map(Number);if(h)S.ov[i]=h;else delete S.ov[i];return render()}
+  if(d.ml){mlang=d.ml;return render()}
+  if(d.act==="copy"){const t=$("msgtxt").textContent;try{await navigator.clipboard.writeText(t)}catch(x){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();document.execCommand("copy");a.remove()}return toast(T("copied"))}
+  if(d.act==="dl"){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([$("msgtxt").textContent],{type:"text/plain;charset=utf-8"}));a.download=`metro_message_${S.date}.txt`;a.click()}
+  if(d.act==="reset"){localStorage.clear();location.reload()}
+});
+document.addEventListener("change",async e=>{
+  const t=e.target;
+  if(t.id==="dpick"){S.date=t.value||S.date;S.ov={};render()}
+  if(t.id==="csv"&&t.files[0]){try{const r=parseCSV(await t.files[0].text());lookup=r.lk;$("csvInfo").textContent=r.n+" rows loaded."}catch(x){$("csvInfo").textContent=x.message}}
+});
+document.addEventListener("input",e=>{
+  const x=e.target,ds=x.dataset||{};
+  if(ds.k){const v=parseFloat(x.value);if(!isNaN(v)){P[ds.k]=v;store.set("mh_p",P)}}
+  if(ds.r){const r=RULES.find(q=>q.id===ds.r);if(r){r[ds.f]=ds.f==="pct"?(parseFloat(x.value)||0):x.value;store.set("mh_rules",RULES)}}
+});
+document.addEventListener("toggle",e=>{const d=e.target;if(d.dataset&&d.dataset.rid){if(d.open)openRule=d.dataset.rid;else if(openRule===d.dataset.rid)openRule=null}},true);
+(function init(){
+  const t=new Date();t.setDate(t.getDate()+1);S.date=iso(t);
+  P={...PDEF,...(store.get("mh_p")||{})};S.lang=store.get("mh_lang")||"en";
+  RULES=store.get("mh_rules")||[];
+  if(store.get("mh_ladder")) LADDER=store.get("mh_ladder");
+  if(store.get("mh_bands")) B=store.get("mh_bands");
+  if(store.get("mh_ev")) EV=store.get("mh_ev");
+  setTheme(store.get("mh_theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"));
+  render();
+})();
+</script>
+</body>
+</html>
