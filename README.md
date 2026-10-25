@@ -2,7 +2,7 @@
 
 # GMRC Master Dispatch & Headway Recommender (PS-04)
 
-An enterprise-grade, offline-first SCADA and Operations Control Center (OCC) dashboard engineered for the **Gujarat Metro Rail Corporation (GMRC)**. Built for the Smart India Hackathon, this system replaces rigid static timetables with dynamic, data-driven headway optimization to prevent station overcrowding during peak commutes, major cultural events (Navratri, IPL matches), and adverse weather shifts.
+An enterprise-grade, offline-first SCADA and Operations Control Center (OCC) dashboard engineered for the **Gujarat Metro Rail Corporation (GMRC)**. Built for the Metro Hacks Hackathon, this system replaces rigid static timetables with dynamic, data-driven headway optimization to prevent station overcrowding during peak commutes, major cultural events (Navratri, IPL matches), and adverse weather shifts.
 
 ---
 
